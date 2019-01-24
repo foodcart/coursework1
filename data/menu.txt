@@ -1,4 +1,4 @@
-C1, Latte, Coffee, 10.00, AED, "Caffè latte"
+C1, Latte, Coffee, 10.00, AED, "CaffÃ¨ latte"
 C2, Mocha, Coffee, 10.00, AED, "An espresso with milk, foam, choco syrup"
 C3, Cappucino, Coffee, 10.00, AED, "A double espresso with steamed milk foam"
 T1, Kadak Chai, Tea, 8.00, AED, "Hot Tea with milk, the indian style"
