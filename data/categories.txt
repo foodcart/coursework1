@@ -1,5 +1,3 @@
-Coffee
-Tea
-Blended
-Rolls
-Sandwiches
+C1, Hot Drinks
+C2, Cold Drinks
+C3, Bites
