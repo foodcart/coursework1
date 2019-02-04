@@ -1,13 +1,10 @@
-M001_C001,Latte,C001,10,AED, "Caffè latte"
-M002_C001,Mocha,C001,10,AED, "An espresso with milk foam and Choco Syrup"
-M003_C001,Cappucino,C001,10,AED, "A double espresso with steamed milk foam"
-M004_C002,Kadak Chai,C002,8,AED, "Hot Tea with milk - the indian style"
-M005_C002,Iced Tea,C002,10,AED, "Lemon flavoured cold tea with ice cubes"
-M006_C002,Hot Tea,C002,6,AED, "Steaming hot fine black tea"
-M007_C003,Smoothie,C003,14,AED, "Smoothie from premium fruits of your choice"
-M008_C003,Coffee Cooler,C003,12,AED, "Blended cold coffee"
-M009_C004,Cinnamon Roll,C004,6,AED,"Sweet Cinnamon Roll - a Danish Delight"
-M010_C004,Paneer Cigar Roll,C004,7,AED, "Indian Delight"
-M011_C004,Turkey Pesto Roll,C004,7,AED, "Turkey with Cheese and Pesto"
-M012_C005,Chicken Salad Sandwich,C005,10,AED, "Roasted chicken breast with herbs and sauces of your choice"
-M013_C005,Spicy Jack&Egg Sandwich,C005,10,AED, "Fluffy egg with Monterey Jack cheese in a spicy spread"
+M01C1,"Tea",C1,5,AED
+M02C1,"Espresso",C1,5,AED
+M03C1,"Cappuccino",C1,7,AED
+M04C1,"Hot Chocolate",C1,7,AED
+M05C2,"Iced Coffee",C2,10,AED
+M06C2,"Iced Lemon Tea",C2,7,AED
+M07C3,"Swiss Roll",C3,5,AED
+M08C3,"Cinnamon Roll",C3,5,AED
+M09C3,"Blueberry Muffin",C3,5,AED
+M10C3,"Egg&Cheese Sandwich",C3,10,AED
