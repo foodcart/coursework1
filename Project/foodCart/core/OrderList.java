@@ -3,6 +3,7 @@ import java.io.*;
 import java.sql.Timestamp;
 import java.util.*;
 import java.text.*;
+import java.time.format.DateTimeParseException;
 
 public class OrderList {
 
@@ -43,6 +44,10 @@ public class OrderList {
 					}
 					catch (NumberFormatException nfe) {
 						String error = "Number conversion error in '" + line + "'  - " + nfe.getMessage();
+						System.out.println(error);
+					}
+					catch (DateTimeParseException dtpe) {
+						String error = "DateTime conversion error in '" + line + "'  - " + dtpe.getMessage();
 						System.out.println(error);
 					}
 					catch (ArrayIndexOutOfBoundsException air) {
