@@ -1,0 +1,9 @@
+1,BEVERAGE,Pepsi,4
+2,BEVERAGE,Mirinda,6
+3,BEVERAGE,7up,5
+4,DESERTS,Chocolate brownie,17
+5,DESERTS,Strawberry cheesecake,20
+6,FOOD, Chicken Wings,15
+7,FOOD,Pizza,25
+8,FOOD,Fried Rice,18
+9,FOOD,Chicken Sandwitch,15

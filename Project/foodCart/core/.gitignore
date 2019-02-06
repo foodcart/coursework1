@@ -2,3 +2,5 @@
 /InvalidQuantityException.class
 /Order.class
 /OrderList.class
+/Item.class
+/ItemList.class
