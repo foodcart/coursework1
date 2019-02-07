@@ -90,6 +90,8 @@ public class ItemList {
 	 * @param itemlist
 	 * @return entryset
 	 */
-	//public Set<String>
+	public Set<HashMap.Entry<String,Item>> getMenu(){
+		return ItemList.entrySet();
+	}
 	
 }
