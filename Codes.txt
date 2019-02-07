@@ -1,0 +1,17 @@
+
+	public  void writeToFile(String filename, String report) {
+		 FileWriter fw;
+		 try {
+		    	fw = new FileWriter(filename);
+		    	fw.write(report);
+		    	fw.close();
+		 }
+		 catch (FileNotFoundException fnf){
+			 System.out.println(filename + " not found ");
+			 System.exit(0);
+		 }
+		 catch (IOException ioe){
+		 	ioe.printStackTrace();
+		    	System.exit(1);
+		 }
+	}
