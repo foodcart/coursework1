@@ -12,7 +12,7 @@ package core;
  *
  */
 public class Item {
-	private String id;
+	//private String id;
 	private String category;
 	private String description;
 	private double cost;
@@ -24,8 +24,9 @@ public class Item {
 	 * @param description
 	 * @param cost
 	 */
-	public Item(String id, String category, String description, double cost) {
-		this.id = id;
+//	public Item(String id, String category, String description, double cost) {
+	public Item(String category, String description, double cost) {	
+		//this.id = id;
 		this.category = category;
 		this.description = description;
 		this.cost = cost;
@@ -35,9 +36,9 @@ public class Item {
 	 * This method is used to fetch the id of the item instance.
 	 * @return the id
 	 */
-	public String getId() {
-		return id;
-	}
+	//public String getId() {
+	//	return id;
+	//}
 
 	/**
 	 * This method is used to fetch the category of the item instance.

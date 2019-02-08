@@ -1,30 +1,34 @@
 package core;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
-
-
 /**
  * 
  */
+import java.util.Set;
 
 /**
  * This class is used to record the menu items and read from the already provided text file
  * @author Anwar Kamil
+ * @author Vimal
  *
  */
 public class ItemList {
-	private HashMap<String, Item> ItemList;
+//	private HashMap<String, Item> ItemList;
+	private Map<String, Item > ItemList ;
 
 	/**
 	 * Constructor to create ItemList object / Menu
 	 * @param itemList
 	 */
-	public ItemList(HashMap<String, Item> itemList) {
-		ItemList = itemList;
+	public ItemList( ) {
+		String filename = new String("../foodCart/core/menuitems.db");
+		ItemList  = readFile(filename );
 	}
 	
 	/**
@@ -39,8 +43,12 @@ public class ItemList {
 	/**
 	 * Method to read menu text file.
 	 * @param filename
+	 * @return 
 	 */
-	public void readFile(String filename) {
+	private Map<String, Item> readFile(String filename) {
+		
+		Map<String, Item > ItemList = new HashMap<String, Item >();
+		
 		try {
 			File f = new File(filename);
 			Scanner scanner = new Scanner(f);
@@ -50,12 +58,11 @@ public class ItemList {
 					try {
 						String parts [] = line.split(",");
 						String id = parts[0];
-						String category = parts[1];
-						String description = parts[2];
+						String category = parts[2];
+						String description = parts[1];
 						Double cost = Double.parseDouble(parts[3].trim());
-						
-						Item item = new Item(id,category,description, cost);
-						ItemList.put(item.getCategory() + item.getId(), item);
+						Item item = new Item(category,description, cost);
+						ItemList.put(id, item);
 						
 					
 					}catch (NumberFormatException nfe) {
@@ -83,15 +90,30 @@ public class ItemList {
 		System.out.println( filename + " not found ");
 		System.exit(0);
 		}
+		return ItemList;
 	}
 	
 	/**
-	 * This method provides the set for all the hashmap key value pairs of the ItemList created
-	 * @param itemlist
-	 * @return entryset
+	 * This method returns the hashmap ItemList created
+	 * @return ItemList
 	 */
-	public Set<HashMap.Entry<String,Item>> getMenu(){
-		return ItemList.entrySet();
+	public Map<String, Item> getMenuItems(){
+		return ItemList;
 	}
 	
+	/**
+	 * This method returns the hashmap Menu Categories loaded
+	 * @return Map<String, String>
+	 */
+	public Map<String, String> getMenuCategories(){
+		Map<String, String > Categories = new HashMap<String, String >();
+		String KeyString;
+		for (Entry<String, Item> entry : ItemList.entrySet()) {
+		    if( !Categories.containsValue( entry.getValue().getDescription())){
+		    	KeyString = entry.getKey(); KeyString = KeyString.substring(KeyString.length()-2);
+		    	Categories.put(KeyString, entry.getValue().getCategory());
+		    }
+		}
+		return Categories;
+	}	
 }
