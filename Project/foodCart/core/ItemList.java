@@ -61,7 +61,7 @@ public class ItemList {
 						String category = parts[2];
 						String description = parts[1];
 						Double cost = Double.parseDouble(parts[3].trim());
-						Item item = new Item(category,description, cost);
+						Item item = new Item(id,category,description, cost);
 						ItemList.put(id, item);
 						
 					
@@ -97,8 +97,16 @@ public class ItemList {
 	 * This method returns the hashmap ItemList created
 	 * @return ItemList
 	 */
-	public Map<String, Item> getMenuItems(){
-		return ItemList;
+	public Map<String, String> getMenuItems(String Category){
+		
+		Map<String, String> menuItems = new HashMap<String, String>();
+		
+		for (Entry<String, Item> entry : ItemList.entrySet()) {
+			if(Category.equals(entry.getValue().getCategory())){
+					menuItems.put(entry.getKey(), entry.getValue().getDescription());
+			}
+		}
+		return menuItems;
 	}
 	
 	/**
@@ -106,10 +114,14 @@ public class ItemList {
 	 * @return Map<String, String>
 	 */
 	public Map<String, String> getMenuCategories(){
+		
 		Map<String, String > Categories = new HashMap<String, String >();
+		
 		String KeyString;
+		//construct menu categories from the Menu Map
 		for (Entry<String, Item> entry : ItemList.entrySet()) {
 		    if( !Categories.containsValue( entry.getValue().getDescription())){
+		    	//2 Character Key for the Menu Category
 		    	KeyString = entry.getKey(); KeyString = KeyString.substring(KeyString.length()-2);
 		    	Categories.put(KeyString, entry.getValue().getCategory());
 		    }
