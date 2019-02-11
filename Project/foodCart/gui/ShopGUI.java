@@ -5,6 +5,7 @@ package gui;
  */
 import javax.swing.*;
 import javax.swing.border.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
@@ -119,10 +120,10 @@ public class ShopGUI {
 	private void removeItem() {
 		try {
 			int selectedRowID = oneOrder.getSelectedRow();
-			if (selectedRowID > 0) {
+			if (selectedRowID >= 0) {
 				model.removeRow(selectedRowID);
 			} else {
-				dialog("Please select and item to remove", JOptionPane.INFORMATION_MESSAGE);
+				dialog("Please select an item to remove", JOptionPane.INFORMATION_MESSAGE);
 			}
 		} catch (Exception e) {
 			reportException(e, "removeItem");
@@ -130,17 +131,42 @@ public class ShopGUI {
 	}
 
 	private void addItem() {
+		String colVal;
+		boolean exists = false;
 		int counter = 0;
+		int quantity = 0;
+		//get the item count, and add to it
 		int count = model.getRowCount();
 		try {
 			if (!(chosenItem == null)) {
 				if (!(count == 0)) {
-					String colVal = model.getValueAt(count - 1, 0).toString();
+					//check if this item is already there in the list
+					for(int row = 0; row < model.getRowCount(); row++){
+						// check if an item with same description exists
+						if(chosenItem.getId().equals(model.getValueAt(row, 4))){
+							//found item, just increment count and price.
+							exists = true;
+							//get quantity
+							colVal = model.getValueAt(row, 2).toString();
+							quantity = Integer.parseInt(colVal) +  1;
+							model.setValueAt(quantity, row, 2);
+						}
+					}
+					if(exists == false){
+					// this is a new item	
+					colVal = model.getValueAt(count - 1, 0).toString();
 					counter = Integer.parseInt(colVal);
+					}
+				}else{
+					//first item,do nothing here
 				}
-
+				// New Item, increment counters and add it here
+				if(exists == false){
+				counter++;
+				quantity = 1; //default quantity
 				model.insertRow(count,
-						new Object[] { counter + 1, chosenItem.getDescription(), "1", chosenItem.getCost() });
+						new Object[] { counter, chosenItem.getDescription(), quantity, chosenItem.getCost(), chosenItem.getId() });
+				}
 			}
 			else{
 				dialog("Please select an item from the Menu", JOptionPane.INFORMATION_MESSAGE);
@@ -163,6 +189,7 @@ public class ShopGUI {
 		menuItems = ItemList.getMenuItems(chosenCategory);
 		// start creating radio buttons in the itemPanel
 		JRadioButton rbMenuPlaceHolder;
+		try{
 		for (Entry<String, String> entry : menuItems.entrySet()) {
 			rbMenuPlaceHolder = new JRadioButton(entry.getValue());
 			rbMenuPlaceHolder.setActionCommand(entry.getKey());
@@ -170,9 +197,16 @@ public class ShopGUI {
 			itemGrp.add(rbMenuPlaceHolder);
 			itemPanel.add(rbMenuPlaceHolder);
 		}
+		}
+		catch(Exception e){
+			reportException(e, "setMenuButtons(Category = " + Category + ")");
+		}
 	}
 
 	private void instantiate() {
+		
+		// init the model
+		model = new javax.swing.table.DefaultTableModel(0, 5);
 		// instantiate the MenuList
 		ItemList = new ItemList();
 		menuCategories = ItemList.getMenuCategories();
@@ -246,7 +280,7 @@ public class ShopGUI {
 		// West Panel
 		panelWest = new JPanel(new GridLayout(1, 2));
 		panelWest.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		int cpWidth = panelWest.getWidth();
+		//int cpWidth = panelWest.getWidth();
 		int cpHeight = panelWest.getHeight();
 		panelWest.getBounds().setSize(20, cpHeight);
 		catPanel = new JPanel(new GridLayout(15, 1, 5, 0));
@@ -304,11 +338,16 @@ public class ShopGUI {
 
 		JPanel rightPane = new JPanel();
 		rightPane.setLayout(new BoxLayout(rightPane, BoxLayout.PAGE_AXIS));
-
-		model = new javax.swing.table.DefaultTableModel(0, 4);
-
+		
+		//the table
 		oneOrder = new JTable(model);
 		oneOrder.setShowGrid(false);
+		
+		//prepare right alignment rendering for certain columns of table.
+		DefaultTableCellRenderer rAlignRndr = new DefaultTableCellRenderer();
+		rAlignRndr.setHorizontalAlignment(JLabel.RIGHT);
+		
+		//set table properties
 		TableColumn column = oneOrder.getColumnModel().getColumn(0);
 		column.setHeaderValue(new String("#"));
 		column.setMinWidth(30);
@@ -319,12 +358,14 @@ public class ShopGUI {
 
 		column = oneOrder.getColumnModel().getColumn(2);
 		column.setHeaderValue(new String("Nos."));
+		column.setCellRenderer(rAlignRndr);
 		column.setMinWidth(50);
 
 		column = oneOrder.getColumnModel().getColumn(3);
-		column.setHeaderValue(new String(" "));
-		column.setMinWidth(40);
-
+		column.setHeaderValue(new String("Price/Unit"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(60);
+		
 		JScrollPane tableHolder = new JScrollPane(oneOrder);
 		tableHolder.setBorder(BorderFactory.createTitledBorder("Order"));
 		rightPane.add(tableHolder);
@@ -334,23 +375,23 @@ public class ShopGUI {
 		doTotal.addActionListener(actionListener);
 		doTotal.setActionCommand("TOTA");
 
-		commitOrder = new JButton("Generate Bill");
-		commitOrder.setMaximumSize(new Dimension(120, 25));
+		commitOrder = new JButton("        Generate Bill        ");
+		commitOrder.setMaximumSize(new Dimension(300, 25));
 		commitOrder.addActionListener(actionListener);
 		commitOrder.setActionCommand("BILL");
 
 		JPanel billButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
 
-		billButtons.add(doTotal);
+		//billButtons.add(doTotal);
 		billButtons.add(commitOrder);
 
 		rightPane.add(billButtons);
 
-		rightPane.setPreferredSize(new Dimension(250, 300));
+		rightPane.setPreferredSize(new Dimension(270, 300));
 
 		panelCentre.add(rightPane);
 
-		panelCentre.setPreferredSize(new Dimension(410, 400));
+		panelCentre.setPreferredSize(new Dimension(430, 400));
 	}
 
 	private void prepareMainPanel() {
