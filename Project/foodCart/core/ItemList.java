@@ -26,9 +26,13 @@ public class ItemList {
 	 * Constructor to create ItemList object / Menu
 	 * @param itemList
 	 */
-	public ItemList( ) {
-		String filename = new String("../foodCart/core/menuitems.db");
+	public ItemList(String file ) {
+		String filename = file;
 		ItemList  = readFile(filename );
+	}
+	
+	public ItemList( ) {
+		ItemList  = new HashMap<String,Item>();
 	}
 	
 	/**

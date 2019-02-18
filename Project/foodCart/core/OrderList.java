@@ -8,20 +8,45 @@ import java.time.format.DateTimeParseException;
 public class OrderList {
 
 	private TreeMap<Integer,Order> OrderList;
+	private String FileName;
 	
+	public OrderList(String file) {
+		FileName = file;//new String("../foodCart/core/orderlist.db");
+		OrderList = new TreeMap<Integer,Order>();
+		readFile(FileName);
+	}
 	public OrderList() {
 		OrderList = new TreeMap<Integer,Order>();
 	}
-	
-	public void add(Order o) {
+	// this method adds a give order to the map
+	public void add(Order o){
 		OrderList.put(o.getID(),o);
+	}
+	// This method adds a new Order to the OrderList and returns the Order
+	public boolean add(int customer, String item, int quantity, double discount, double total) {
+		boolean status = false;
+		int id = OrderList.lastKey() + 1; //increment order id
+		Timestamp time = new Timestamp(System.currentTimeMillis());
+		Order newOrder;
+		try {
+			newOrder = new Order(id, customer, item, quantity, time, discount, total);
+			add(newOrder);
+			status = true;
+		} catch (InvalidQuantityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		return status;
 	}
 		
 	public int getSize() {
 		return OrderList.size();
 	}
 	
-	public void readFile(String filename) {
+	private void readFile(String filename) {
 		try {
 			File f = new File(filename);
 			Scanner scanner = new Scanner(f);

@@ -11,6 +11,8 @@ import javax.swing.table.TableColumn;
 
 import core.Item;
 import core.ItemList;
+import core.Order;
+import core.OrderList;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -24,9 +26,7 @@ public class ShopGUI {
 	private JFrame frame;
 	private JPanel mainPanel;
 	private JPanel panelNorth;
-	private JPanel panelEast;
 	private JPanel panelWest;
-	private JPanel panelSouth;
 	private JPanel panelCentre;
 	private ButtonGroup catGrp;
 	private ButtonGroup itemGrp;
@@ -48,7 +48,12 @@ public class ShopGUI {
 	private ItemList ItemList;
 	private Map<String, String> menuItems;
 	private Map<String, String> menuCategories;
+	private OrderList OrderList;
 	private Item chosenItem;
+	
+	//file paths
+	private String OrderFile;
+	private String MenuFile;
 
 	// sub class actionListener for Category
 	class crActionListener implements ActionListener {
@@ -97,10 +102,11 @@ public class ShopGUI {
 			case "REMI":
 				removeItem();
 				break;
-			case "TOTA":
-				System.out.print(e.getActionCommand());
+			//case "TOTA":
+			//	System.out.print(e.getActionCommand());
 			case "BILL":
-				System.out.print(e.getActionCommand());
+				generateBill();
+				break;
 			}
 		}
 
@@ -117,6 +123,17 @@ public class ShopGUI {
 		dialog("Exception reached: Please contact FoodCart Support", JOptionPane.ERROR_MESSAGE);
 	}
 
+	private void generateBill(){
+		
+		try{
+			
+			
+		}catch(Exception e){
+			//unknown exception, so report this
+			reportException(e, "generateBill");
+		}
+	}
+	
 	private void removeItem() {
 		try {
 			int selectedRowID = oneOrder.getSelectedRow();
@@ -204,12 +221,16 @@ public class ShopGUI {
 	}
 
 	private void instantiate() {
-		
+		//filepaths
+		MenuFile = new String("../foodCart/core/menuitems.db");
+		OrderFile = new String("../foodCart/core/orderlist.db");
+		// instantiate the MenuList
+		ItemList = new ItemList(MenuFile);
+		menuCategories = ItemList.getMenuCategories();
+		// Instantiate the OrderList
+		OrderList = new OrderList(OrderFile);
 		// init the model
 		model = new javax.swing.table.DefaultTableModel(0, 5);
-		// instantiate the MenuList
-		ItemList = new ItemList();
-		menuCategories = ItemList.getMenuCategories();
 		// then listen to buttons
 		actionListener = new ButtonsActionListener();
 		// Set look and feel
@@ -405,7 +426,7 @@ public class ShopGUI {
 
 	// public methods
 	public static void main(String[] args) {
-		ShopGUI gui = new ShopGUI();
+		new ShopGUI();
 	}
 
 	public ShopGUI() {
