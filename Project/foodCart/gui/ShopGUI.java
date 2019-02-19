@@ -8,6 +8,8 @@ import javax.swing.border.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 import core.Item;
 import core.ItemList;
@@ -16,8 +18,11 @@ import core.Order;
 import core.OrderList;
 
 import java.awt.*;
+import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -86,6 +91,40 @@ public class ShopGUI {
 			return value;
 		}
 	}
+	/*
+	 * local class to keep organize order when preparing bill
+	 */
+	class WorkingOrder {
+		String item;
+		String category;
+		int quantity;
+		double discount;
+		double price;
+
+		WorkingOrder() {
+			quantity = 0;
+			discount = 0;
+			price = 0;
+		}
+	}
+/*
+ * local class to help with reports
+ */
+	class ReportData {
+		int orderCount;
+		double price;
+		double totalDiscount;
+		double revenue;
+		String category;
+		String id;
+
+		ReportData() {
+			orderCount = 0;
+			totalDiscount = 0;
+			revenue = 0;
+			price = 0;
+		}
+	}	
 
 	// sub class actionListener for Category
 	class crActionListener implements ActionListener {
@@ -128,7 +167,7 @@ public class ShopGUI {
 				displayOrderList();
 				break;
 			case "SUMM":
-				generateReport();
+				generateReport(false);
 				break;
 			case "ADDI":
 				addItem();
@@ -158,12 +197,211 @@ public class ShopGUI {
 	}
 
 	/*
-	 * Generate report on Orders, items ordered, total revenue etc. 
+	 * Generate report on Orders, items ordered, total revenue etc.
 	 */
-	private void generateReport(){
+	private void generateReport( boolean onClose ) {
+		ReportData data; 
+		double totalrevenue = 0;
+		double totaldiscount = 0;
+		int totalorders = 0;
+		Order oneOrder;
+		// temp store for calculations
+		Map<String, ReportData> store = new HashMap<String, ReportData>();
+		// Item Model = {Item Code, Desc, Category, Price, No.of Orders, Total Discount,
+		// Total Revenue}
+		DefaultTableModel itemModel = new fcTableModel(0, 7);
+		Collection<Order> orderTree = OrderList.getOrderItems();
+		Iterator<Order> iterator = orderTree.iterator();
+		while (iterator.hasNext()) {
+			oneOrder = iterator.next();
+			if (store.containsKey(oneOrder.getItem())) {
+				data = store.get(oneOrder.getItem());
+				data.orderCount++;
+				data.revenue += oneOrder.getTotal();
+				data.totalDiscount += (oneOrder.getDiscount() * data.price);
+			} else {
+				data = new ReportData();
+				try {
+					Item item = ItemList.findByName(oneOrder.getItem());
+					data.price = item.getCost();
+					data.category = item.getCategory();
+					data.id = item.getId();
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+				data.revenue = oneOrder.getTotal();
+				data.totalDiscount = (oneOrder.getDiscount() * data.price);
+				data.orderCount = 1;
+				store.put(oneOrder.getItem(),data);
+			}
+		}
+
+		int row = 0;
+		for (Entry<String, ReportData> entry : store.entrySet()) {
+			data = entry.getValue();
+			itemModel.insertRow(row, new Object[] { data.id, entry.getKey(), data.category, data.price, data.orderCount,
+					data.totalDiscount, data.revenue });
+			totalrevenue+= data.revenue;
+			totalorders+= data.orderCount;
+			totaldiscount+= data.totalDiscount;
+		}
+
+		Color white = new Color(255,255,255);	
 		
+		//{ "ID", "Item Desc.", "Category", "Price", "Orders", "Discount", "Revenue" };
+		JTable itemReport = new JTable(itemModel);
+		itemReport.setAutoCreateRowSorter(true);
+		itemReport.setBackground(white);
+		
+		TableRowSorter<TableModel> rowSorter = new TableRowSorter<TableModel>(itemReport.getModel());
+		itemReport.setRowSorter(rowSorter);
+		
+		ArrayList<RowSorter.SortKey> sortKeyList = new ArrayList<>(25);
+		sortKeyList.add(new RowSorter.SortKey(6, SortOrder.DESCENDING));
+		sortKeyList.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+		rowSorter.setSortKeys(sortKeyList);
+		
+		
+		// prepare right alignment rendering for certain columns of table.
+		DefaultTableCellRenderer rAlignRndr = new DefaultTableCellRenderer();
+		rAlignRndr.setHorizontalAlignment(JLabel.RIGHT);
+		
+		// set table properties
+		TableColumn column = itemReport.getColumnModel().getColumn(0);
+		column.setHeaderValue(new String("ID"));
+		column.setMinWidth(30);
+
+		column = itemReport.getColumnModel().getColumn(1);
+		column.setHeaderValue(new String("Item Desc"));
+		column.setMinWidth(120);
+
+		column = itemReport.getColumnModel().getColumn(2);
+		column.setHeaderValue(new String("Category"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(50);
+
+		column = itemReport.getColumnModel().getColumn(3);
+		column.setHeaderValue(new String("Price"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(60);
+
+		column = itemReport.getColumnModel().getColumn(4);
+		column.setHeaderValue(new String("Orders"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(60);
+
+		column = itemReport.getColumnModel().getColumn(5);
+		column.setHeaderValue(new String("Discount"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(60);
+		
+		column = itemReport.getColumnModel().getColumn(6);
+		column.setHeaderValue(new String("Revenue"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(60);
+
+		JScrollPane reportHolder = new JScrollPane(itemReport);
+		reportHolder.setBackground(white);
+		
+		
+		JPanel report = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+		JPanel  reportBox = new JPanel();
+		reportBox.setLayout(new BoxLayout(reportBox, BoxLayout.PAGE_AXIS));
+		reportBox.setBorder(BorderFactory.createTitledBorder("Report"));
+		reportBox.setBackground(white);
+		reportBox.setPreferredSize(new Dimension(700, 410));
+		reportBox.setMinimumSize(new Dimension(700, 410));
+		
+		
+		
+		JLabel Ldate = new JLabel("Report generated on: " + DateFormat.getDateTimeInstance().format(new Date()));
+		Ldate.setHorizontalAlignment(JLabel.LEFT);
+		JLabel headLabel = new JLabel("Sales Summary");
+		headLabel.setHorizontalAlignment(JLabel.LEFT);
+		// Set a bigger possible font for the heading
+		headLabel.setFont(new Font(headLabel.getFont().getName(), Font.BOLD, 12));
+		JPanel headHolder = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+		headHolder.setBackground(new Color(255, 255, 255));
+		headHolder.add(headLabel);
+		JPanel timeHolder = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		timeHolder.setBackground(new Color(255, 255, 255));
+		timeHolder.add(Ldate);
+		
+		
+		reportBox.add(headHolder);
+		reportBox.add(timeHolder);
+
+		JPanel insightPane = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		insightPane.setBackground(new Color(255, 255, 255));
+		JLabel spacer1 = new JLabel("   ");
+		insightPane.add(spacer1);	
+		reportBox.add(insightPane);
+		
+		insightPane = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		insightPane.setBackground(new Color(255, 255, 255));
+		spacer1 = new JLabel("Aggregates:");
+		spacer1.setFont(new Font(headLabel.getFont().getName(), Font.BOLD + Font.ITALIC, 11));
+		insightPane.add(spacer1);	
+		reportBox.add(insightPane);
+		
+		JLabel torders = new JLabel("Total Orders	:	" + Integer.toString(totalorders));
+		insightPane = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		insightPane.setBackground(new Color(255, 255, 255));
+		insightPane.add(torders);
+		reportBox.add(insightPane);
+		
+		torders = new JLabel("Total Discounts	:	"  + "AED " + Double.toString(totaldiscount) );
+		insightPane = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		insightPane.setBackground(new Color(255, 255, 255));
+		insightPane.add(torders);
+		reportBox.add(insightPane);
+		
+		torders = new JLabel("Total Revenue	:	"  + "AED " + Double.toString(totalrevenue) );
+		insightPane = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		insightPane.setBackground(new Color(255, 255, 255));
+		insightPane.add(torders);
+		reportBox.add(insightPane);
+		
+		insightPane = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		insightPane.setBackground(new Color(255, 255, 255));
+		spacer1 = new JLabel(" ");
+		insightPane.add(spacer1);	
+		reportBox.add(insightPane);
+
+		insightPane = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		insightPane.setBackground(new Color(255, 255, 255));
+		spacer1 = new JLabel("Items:");
+		spacer1.setFont(new Font(headLabel.getFont().getName(), Font.BOLD + Font.ITALIC, 11));
+		insightPane.add(spacer1);	
+		reportBox.add(insightPane);
+		
+		reportBox.add(reportHolder);
+		
+		
+		report.add(reportBox);
+		report.setBackground(white);
+		if(!onClose){
+		mainPanel.removeAll();
+		mainPanel.add(report);
+		mainPanel.repaint();
+		}else{
+			frame.setVisible(false);
+			frame.dispose();
+			ImageIcon icon = new ImageIcon("../foodCart/gui/coffee_shop.gif");
+			JFrame popup = new JFrame("Group 6 Coffee Shop - Sales Report");
+			popup.setIconImage(icon.getImage());
+			popup.setSize(900, 600);// 1200 width : 600 height
+			popup.setLocationRelativeTo(null);// to set to center
+			
+			popup.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			popup.getContentPane().add(report);
+			popup.pack();
+			popup.setVisible(true);
+			
+		}
 		
 	}
+
 	/**
 	 * Apply discounts and generate bill
 	 */
@@ -172,25 +410,25 @@ public class ShopGUI {
 			dialog("Please add items to the Order list before generating bill", JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
-		workingOrder wo;
+		WorkingOrder wo;
 		int quantity = 0;
 		int counter = 0;
 		int counter1 = 0;
 		int counter3 = 0;
 		// temp container for orders - category c1 and c2
-		Map<Integer, workingOrder> c1 = new HashMap<Integer, workingOrder>();
-		// Map<Integer, workingOrder> c2 = new HashMap<Integer,
-		// workingOrder>();//temp container for orders, category c2
+		Map<Integer, WorkingOrder> c1 = new HashMap<Integer, WorkingOrder>();
+		// Map<Integer, WorkingOrder> c2 = new HashMap<Integer,
+		// WorkingOrder>();//temp container for orders, category c2
 		// temp container for orders - category c1 and c3
-		Map<Integer, workingOrder> c3 = new HashMap<Integer, workingOrder>();
+		Map<Integer, WorkingOrder> c3 = new HashMap<Integer, WorkingOrder>();
 		// temp container after applying discount
-		Map<Integer, workingOrder> currOrder = new HashMap<Integer, workingOrder>();
+		Map<Integer, WorkingOrder> currOrder = new HashMap<Integer, WorkingOrder>();
 		try {
 			// add all orders in Model to C1, C2 or C3
 			for (int row = 0; row < model.getRowCount(); row++) {
 				quantity = Integer.parseInt(model.getValueAt(row, TABCOLS.QUAN.getValue()).toString());
 				while (quantity > 0) {
-					wo = new workingOrder();
+					wo = new WorkingOrder();
 					wo.item = model.getValueAt(row, TABCOLS.DESC.getValue()).toString();
 					wo.category = model.getValueAt(row, TABCOLS.ID.getValue()).toString();
 					wo.category = wo.category.substring(wo.category.length() - 2);
@@ -219,26 +457,26 @@ public class ShopGUI {
 		// apply discount. Any C1/C2 + C3 gets a 20% discount on C3.
 		// we know we have number of items = counter .
 		counter = 0;
-		workingOrder c3wo;
-		workingOrder cwo;
+		WorkingOrder c3wo;
+		WorkingOrder cwo;
 		boolean isFound = false;
 		// process C3 first
-		for (Entry<Integer, workingOrder> c3entry : c3.entrySet()) {
+		for (Entry<Integer, WorkingOrder> c3entry : c3.entrySet()) {
 			c3wo = c3entry.getValue();
 			// if any c1 or c 2 item is available, give 20% discount on C3
 			if (c1.size() > 0) {
 				// move one of the c1 items to currOrder, and remove it from c1.
-				for (Entry<Integer, workingOrder> entry : c1.entrySet()) {
+				for (Entry<Integer, WorkingOrder> entry : c1.entrySet()) {
 					cwo = entry.getValue();
 					// check if current order has same entry, then update
 					// quantity, else put
 					isFound = false;
 					// find and update.
-					for (Entry<Integer, workingOrder> coentry : currOrder.entrySet()) {
+					for (Entry<Integer, WorkingOrder> coentry : currOrder.entrySet()) {
 						if (coentry.getValue().item.equals(cwo.item)) {
 							isFound = true;
 							int cic = coentry.getKey();
-							workingOrder ciwo = coentry.getValue();
+							WorkingOrder ciwo = coentry.getValue();
 							ciwo.quantity = ciwo.quantity + cwo.quantity;
 							currOrder.remove(cic);
 							currOrder.put(cic, ciwo);// update new quantity
@@ -263,11 +501,11 @@ public class ShopGUI {
 				// add the non discounted item
 				isFound = false;
 				// if found increment quantity
-				for (Entry<Integer, workingOrder> coentry : currOrder.entrySet()) {
+				for (Entry<Integer, WorkingOrder> coentry : currOrder.entrySet()) {
 					if (coentry.getValue().item.equals(c3wo.item) && (coentry.getValue().discount == c3wo.discount)) {
 						isFound = true;
 						int cic = coentry.getKey();
-						workingOrder ciwo = coentry.getValue();
+						WorkingOrder ciwo = coentry.getValue();
 						ciwo.quantity = ciwo.quantity + c3wo.quantity;
 						currOrder.remove(cic);
 						currOrder.put(cic, ciwo);// update new quantity
@@ -284,15 +522,15 @@ public class ShopGUI {
 
 		}
 		// now process any remaining c1.
-		for (Entry<Integer, workingOrder> entry : c1.entrySet()) {
+		for (Entry<Integer, WorkingOrder> entry : c1.entrySet()) {
 			cwo = entry.getValue();
 			isFound = false;
 			// if item already there, increment quantity
-			for (Entry<Integer, workingOrder> coentry : currOrder.entrySet()) {
+			for (Entry<Integer, WorkingOrder> coentry : currOrder.entrySet()) {
 				if (coentry.getValue().item.equals(cwo.item)) {
 					isFound = true;
 					int cic = coentry.getKey();
-					workingOrder ciwo = coentry.getValue();
+					WorkingOrder ciwo = coentry.getValue();
 					// if required, we can add a buy 1, get one free discount
 					// here, but not now.
 					// we increment quantity for now
@@ -317,7 +555,7 @@ public class ShopGUI {
 		double order_price = 0;
 		// get the last customer in orderlist, and increment
 		int customer = OrderList.getLastCustomer() + 1;
-		for (Entry<Integer, workingOrder> coentry : currOrder.entrySet()) {
+		for (Entry<Integer, WorkingOrder> coentry : currOrder.entrySet()) {
 			order_price = coentry.getValue().price;
 			total = (coentry.getValue().price - (coentry.getValue().price * coentry.getValue().discount))
 					* coentry.getValue().quantity;
@@ -726,7 +964,7 @@ public class ShopGUI {
 	 * Method to display OrderList
 	 */
 	private void displayOrderList() {
-		
+
 		Collection<Order> orderTree;
 		double order_price;
 		JPanel liso = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
@@ -738,7 +976,7 @@ public class ShopGUI {
 
 		DefaultTableModel orderModel = new javax.swing.table.DefaultTableModel(0, 8);
 		int tcount = 0;
-		
+
 		try {
 			orderTree = OrderList.getOrderItems();
 			if (orderTree == null) {
@@ -749,11 +987,11 @@ public class ShopGUI {
 			while (orderIterator.hasNext()) {
 				Order oneOrder = orderIterator.next();
 				order_price = ItemList.findByName(oneOrder.getItem().toString()).getCost();
-				
+
 				orderModel.insertRow(tcount,
 						new Object[] { oneOrder.getID(), oneOrder.getCustomer(), oneOrder.getItem(),
-								oneOrder.getQuantity(), order_price, ( oneOrder.getDiscount() * order_price ), oneOrder.getTotal(),
-								oneOrder.getTime() });
+								oneOrder.getQuantity(), order_price, (oneOrder.getDiscount() * order_price),
+								oneOrder.getTotal(), oneOrder.getTime() });
 				tcount++;
 
 			}
@@ -762,51 +1000,50 @@ public class ShopGUI {
 		}
 
 		JTable orderTable = new JTable(orderModel);
-		
+
 		// prepare right alignment rendering for certain columns of table.
-					DefaultTableCellRenderer rAlignRndr = new DefaultTableCellRenderer();
-					rAlignRndr.setHorizontalAlignment(JLabel.RIGHT);
-					// set table properties
-					TableColumn column = orderTable.getColumnModel().getColumn(BILLCOLS.ID.getValue());
-					column.setHeaderValue(new String("Order"));
-					column.setMinWidth(30);
+		DefaultTableCellRenderer rAlignRndr = new DefaultTableCellRenderer();
+		rAlignRndr.setHorizontalAlignment(JLabel.RIGHT);
+		// set table properties
+		TableColumn column = orderTable.getColumnModel().getColumn(BILLCOLS.ID.getValue());
+		column.setHeaderValue(new String("Order"));
+		column.setMinWidth(30);
 
-					column = orderTable.getColumnModel().getColumn(1);
-					column.setHeaderValue(new String("Customer"));
-					column.setMinWidth(30);
+		column = orderTable.getColumnModel().getColumn(1);
+		column.setHeaderValue(new String("Customer"));
+		column.setMinWidth(30);
 
-					column = orderTable.getColumnModel().getColumn(2);
-					column.setHeaderValue(new String("Item"));
-					column.setMinWidth(120);
+		column = orderTable.getColumnModel().getColumn(2);
+		column.setHeaderValue(new String("Item"));
+		column.setMinWidth(120);
 
-					column = orderTable.getColumnModel().getColumn(3);
-					column.setHeaderValue(new String("Nos."));
-					column.setCellRenderer(rAlignRndr);
-					column.setMinWidth(30);
+		column = orderTable.getColumnModel().getColumn(3);
+		column.setHeaderValue(new String("Nos."));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(30);
 
-					column = orderTable.getColumnModel().getColumn(4);
-					column.setHeaderValue(new String("Price"));
-					column.setCellRenderer(rAlignRndr);
-					column.setMinWidth(30);
-					
-					column = orderTable.getColumnModel().getColumn(5);
-					column.setHeaderValue(new String("Discount"));
-					column.setCellRenderer(rAlignRndr);
-					column.setMinWidth(30);
+		column = orderTable.getColumnModel().getColumn(4);
+		column.setHeaderValue(new String("Price"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(30);
 
+		column = orderTable.getColumnModel().getColumn(5);
+		column.setHeaderValue(new String("Discount"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(30);
 
-					column = orderTable.getColumnModel().getColumn(6);
-					column.setHeaderValue(new String("Total"));
-					column.setCellRenderer(rAlignRndr);
-					column.setMinWidth(50);
-					
-					column = orderTable.getColumnModel().getColumn(7);
-					column.setHeaderValue(new String("TimeStamp"));
-					column.setCellRenderer(rAlignRndr);
-					column.setMinWidth(120);
-		
+		column = orderTable.getColumnModel().getColumn(6);
+		column.setHeaderValue(new String("Total"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(50);
+
+		column = orderTable.getColumnModel().getColumn(7);
+		column.setHeaderValue(new String("TimeStamp"));
+		column.setCellRenderer(rAlignRndr);
+		column.setMinWidth(120);
+
 		JScrollPane tableHolder = new JScrollPane(orderTable);
-		
+
 		lisobox.add(tableHolder);
 
 		liso.add(lisobox);
@@ -863,16 +1100,33 @@ public class ShopGUI {
 		frame.add(mainPanel, BorderLayout.WEST);
 		// frame.pack();
 		// set visible
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we){
+				generateReport(true);
+			}
+		});
 		frame.setVisible(true);// set frame to visible
 
 	}
 
-	private class workingOrder {
-		String item;
-		String category;
-		int quantity;
-		double discount;
-		double price;
+	class fcTableModel extends javax.swing.table.DefaultTableModel{
+		private static final long serialVersionUID = 1L;
+		
+		public fcTableModel(Object rowData[][], Object columnNames[]) {
+	         super(rowData, columnNames);
+	      }
+		
+	    public fcTableModel(int rowCount, int columnCount) {
+	    	super( rowCount,  columnCount);
+	    }
+		
+		@Override
+	      public Class getColumnClass(int col) {
+	        if (col == 6 || col == 5 || col == 3)       //double column accepts only doubles
+	        {  return Double.class; }
+	        else { 
+	        	if (col == 4) { return Integer.class; }
+	        	else return String.class; }  //other columns accept String values
+	    }
 	}
 }
