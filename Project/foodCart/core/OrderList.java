@@ -2,54 +2,113 @@ package core;
 import java.io.*;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.Map.Entry;
 import java.text.*;
 import java.time.format.DateTimeParseException;
 
 public class OrderList {
-
+/**
+ * OrdeList is the TreeMap of Orders. 
+ * This class provides utilities to initialize/access/update the OrderList
+ * @author Gabi
+ * @author Vimal
+ */
 	private TreeMap<Integer,Order> OrderList;
 	private String FileName;
-	
+	private MessageStore excpMessage = null;
+
+/**
+ * This is the constructor that reads the given file to populate the Order TreeMap	
+ * @param file
+ */
 	public OrderList(String file) {
 		FileName = file;//new String("../foodCart/core/orderlist.db");
 		OrderList = new TreeMap<Integer,Order>();
-		readFile(FileName);
+		excpMessage = readFile(FileName);
 	}
+	
 	public OrderList() {
 		OrderList = new TreeMap<Integer,Order>();
 	}
-	// this method adds a give order to the map
-	public void add(Order o){
+	
+	public MessageStore getInitExcp(){
+		return excpMessage;
+	}
+/**
+ *  this method adds a given order to the map
+ * @param 
+ */
+	private void add(Order o){
 		OrderList.put(o.getID(),o);
 	}
-	// This method adds a new Order to the OrderList and returns the Order
-	public boolean add(int customer, String item, int quantity, double discount, double total) {
-		boolean status = false;
-		int id = OrderList.lastKey() + 1; //increment order id
+/**
+ *  This method adds a new Order to the OrderList 
+ * @param customer
+ * @param item
+ * @param quantity
+ * @param discount
+ * @param total
+ * @return
+ */
+	public Object[] add(int customer, String item, int quantity, double discount, double total) {
+		Object obj[] = new Object[2];
+		obj[0] = null; obj[1] = null;
+		int id = 0;
+		
+		try{
+		id = OrderList.lastKey(); //increment order id
+		}catch (NoSuchElementException e) {
+			// do nothing here, as id will be zero
+		}
+		id ++;
 		Timestamp time = new Timestamp(System.currentTimeMillis());
 		Order newOrder;
 		try {
 			newOrder = new Order(id, customer, item, quantity, time, discount, total);
 			add(newOrder);
-			status = true;
+			obj[0] = newOrder;
 		} catch (InvalidQuantityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			obj[1] = new MessageStore(e);
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			obj[1] = new MessageStore(e);
 		}
-		return status;
+		return obj;
 	}
-		
+
+	
+/**
+ * This method gets the Customer Number in the Last Order.
+ * @return
+ */
+   public int getLastCustomer(){
+	   try {
+	   return OrderList.lastEntry().getValue().getCustomer();
+	   } catch (Exception e) {
+	return 0;
+	}
+   }
+/**
+ * Get the number of items in Order		
+ * @return
+ */
 	public int getSize() {
 		return OrderList.size();
 	}
-	
-	private void readFile(String filename) {
+/**
+ * This Method takes the file name as input and reads the file to create 
+ * the Orders Tree. 	
+ * @param filename
+ * @return MessageStore - exception, if any
+ */
+	private MessageStore readFile(String filename) {
+		//local variables
+		File f;
+		Scanner scanner = null;
+		//try reading the file
 		try {
-			File f = new File(filename);
-			Scanner scanner = new Scanner(f);
+			f = new File(filename);
+			scanner = new Scanner(f);
 			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine(); 
 				if (line.length() != 0) {
@@ -59,41 +118,71 @@ public class OrderList {
 						int cust = Integer.parseInt(parts[1].trim());
 						String item = parts[2].trim();
 						int qty = Integer.parseInt(parts[3].trim());
-						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-						Date d = sdf.parse(parts[4].trim());
+						
+						double disc = Double.parseDouble(parts[4].trim());
+						double total = Double.parseDouble(parts[5].trim());
+						
+						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+						Date d = sdf.parse(parts[6].trim());
 						Timestamp ts = new Timestamp(d.getTime());
-						double disc = Double.parseDouble(parts[5].trim());
-						double total = Double.parseDouble(parts[6].trim());
+						
 						Order o = new Order(id, cust, item, qty, ts, disc, total);
 						this.add(o);	
 					}
 					catch (NumberFormatException nfe) {
-						String error = "Number conversion error in '" + line + "'  - " + nfe.getMessage();
-						System.out.println(error);
+						return new MessageStore(nfe, "Number conversion error in '" + line + "'  - " + nfe.getMessage());
+						
 					}
 					catch (DateTimeParseException dtpe) {
-						String error = "DateTime conversion error in '" + line + "'  - " + dtpe.getMessage();
-						System.out.println(error);
+						return new MessageStore(dtpe, "DateTime conversion error in '" + line + "'  - " + dtpe.getMessage());
 					}
 					catch (ArrayIndexOutOfBoundsException air) {
-						String error = "Not enough items in  : '" + line + "' index position : " + air.getMessage();
-						System.out.println(error);
+						return new MessageStore(air, "Not enough items in  : '" + line + "' index position : " + air.getMessage());
 					}
 					catch (NullPointerException npe) {
-						String error = "Null value in '" + line + "'  - " + npe.getMessage();
-						System.out.println(error);
+						return new MessageStore( npe, "Null value in '" + line + "'  - " + npe.getMessage() );
 					}
 					catch (Exception e) {
-						String error = "Error occured in '" + line + "'  - " + e.getMessage();
-						System.out.println(error);
+						return new MessageStore(e, "Error occured in '" + line + "'  - " + e.getMessage());
 					}
 				}
 			}
-			scanner.close();
+			return null;
 		}
 		catch (FileNotFoundException fnf){
-			 System.out.println( filename + " not found ");
-			 System.exit(0);
+			 return new MessageStore(fnf, filename + " not found ");
 		 }
+		finally {
+			scanner.close();
+		}
+		
 	}
+/**
+ * Returns the TreeMap of Orders and exception(if any)	
+ * @return
+ */
+	public Object[] getOrderItems( ){
+		Object obj[] = new Object[2];
+		Map<Integer,Order> OrderItems = OrderList;	
+		obj[0] = OrderItems;
+		obj[1] = excpMessage;
+		return obj;
+	}
+	
+	public Object[] getOrderItems( int Customer ){
+		Object obj[] = new Object[2];
+		Map<Integer,Order> OrderItems = new TreeMap<Integer,Order>(); 
+		try{
+		for (Entry<Integer, Order> entry : OrderList.entrySet()) {
+			if( Customer == entry.getValue().getCustomer()){
+				OrderItems.put(entry.getKey(), entry.getValue());
+			}
+		}}catch (Exception e) {
+			obj[1] = new MessageStore(e);
+		}
+		obj[0] = OrderItems;
+		return obj;
+	}
+	
 }
+

@@ -8,9 +8,9 @@ public class Order {
 	private int customer;
 	private String item;
 	private int quantity;
-	private Timestamp time;
 	private double discount;
 	private double total;
+	private Timestamp time;
 	
 	public Order(int id, int customer, String item, int quantity, Timestamp time, double discount, double total) 
 		throws InvalidQuantityException {
@@ -26,12 +26,12 @@ public class Order {
 		}
 	}
 	
-	int getID() { return id;}
-	int getCustomer() { return customer; }
-	String getItem() { return item; }
-	int getQuantity() {return quantity; }
-	Timestamp getTime() { return time; }
-	double getDiscount() { return discount; }
-	double getTotal() { return total; }
+	public int getID() { return id;}
+	public int getCustomer() { return customer; }
+	public String getItem() { return item; }
+	public int getQuantity() {return quantity; }
+	public Timestamp getTime() { return time; }
+	public double getDiscount() { return discount; }
+	public double getTotal() { return total; }
 	
 }
