@@ -124,11 +124,12 @@ public class ShopGUI {
 			case "NEWO":
 				setMainPanelDefaultView();
 				break;
-
 			case "LISO":
-				System.out.print(e.getActionCommand());
+				displayOrderList();
+				break;
 			case "SUMM":
-				System.out.print(e.getActionCommand());
+				generateReport();
+				break;
 			case "ADDI":
 				addItem();
 				break;
@@ -156,6 +157,13 @@ public class ShopGUI {
 		dialog("Exception reached: Please contact FoodCart Support", JOptionPane.ERROR_MESSAGE);
 	}
 
+	/*
+	 * Generate report on Orders, items ordered, total revenue etc. 
+	 */
+	private void generateReport(){
+		
+		
+	}
 	/**
 	 * Apply discounts and generate bill
 	 */
@@ -313,30 +321,31 @@ public class ShopGUI {
 			order_price = coentry.getValue().price;
 			total = (coentry.getValue().price - (coentry.getValue().price * coentry.getValue().discount))
 					* coentry.getValue().quantity;
-			//keep grandtotal
-			grandTotal+= total; 
-		
+			// keep grandtotal
+			grandTotal += total;
+
 			retObj = OrderList.add(customer, coentry.getValue().item, coentry.getValue().quantity,
 					coentry.getValue().discount, total);
 			if (!(retObj[0] == null)) {
 				Order order = (Order) retObj[0];
 				// get price from menulist
-				/*for (Entry<String, String> mEntry : menuItems.entrySet()) {
-					if (mEntry.getValue().equals(order.getItem())) {
-						order_price = ItemList.findByID(mEntry.getKey()).getCost();
-						break;
-					}
-				}*/
-				billModel.insertRow(modelrow, new Object[] { Integer.toString(order.getID()), order.getItem(), Integer.toString(order.getQuantity()),
-						Double.toString(order_price), Double.toString(( order.getDiscount() * order_price )), Double.toString(order.getTotal()) });
+				/*
+				 * for (Entry<String, String> mEntry : menuItems.entrySet()) {
+				 * if (mEntry.getValue().equals(order.getItem())) { order_price
+				 * = ItemList.findByID(mEntry.getKey()).getCost(); break; } }
+				 */
+				billModel.insertRow(modelrow, new Object[] { Integer.toString(order.getID()), order.getItem(),
+						Integer.toString(order.getQuantity()), Double.toString(order_price),
+						Double.toString((order.getDiscount() * order_price)), Double.toString(order.getTotal()) });
 				modelrow++;
 			} else {
 				reportException((Exception) retObj[1], "generateBill:buildModel");
 			}
 		}
 		// add grand total
-		if(billModel.getRowCount() > 0){
-			billModel.insertRow(modelrow, new Object[]{ "*", "Grand Total", "*", "*", "*", Double.toString(grandTotal)});
+		if (billModel.getRowCount() > 0) {
+			billModel.insertRow(modelrow,
+					new Object[] { "*", "Grand Total", "*", "*", "*", Double.toString(grandTotal) });
 		}
 		// add to the JPanel BillContainer.
 		JLabel Ldate = new JLabel(DateFormat.getDateTimeInstance().format(new Date()));
@@ -363,9 +372,9 @@ public class ShopGUI {
 		CustomerPane.add(CustLabel);
 		CustomerPane.add(CustID);
 		try {
-		// clear any existing bill on screen
+			// clear any existing bill on screen
 			BillContainer.removeAll();
-		// build the bill screen	
+			// build the bill screen
 			BillContainer.add(headHolder);
 			BillContainer.add(timeHolder);
 			BillContainer.add(CustomerPane);
@@ -374,52 +383,52 @@ public class ShopGUI {
 		}
 		// add the table
 		try {
-			 JTable oneBill = new JTable(billModel);
-			 oneBill.setShowGrid(false);
-			 
+			JTable oneBill = new JTable(billModel);
+			oneBill.setShowGrid(false);
+
 			// prepare right alignment rendering for certain columns of table.
-				DefaultTableCellRenderer rAlignRndr = new DefaultTableCellRenderer();
-				rAlignRndr.setHorizontalAlignment(JLabel.RIGHT);
-				// set table properties
-				TableColumn column = oneBill.getColumnModel().getColumn(BILLCOLS.ID.getValue());
-				column.setHeaderValue(new String("Order"));
-				column.setMinWidth(30);	
-				
-				column = oneBill.getColumnModel().getColumn(BILLCOLS.NAME.getValue());
-				column.setHeaderValue(new String("Item"));
-				column.setMinWidth(120);
-				
-				column = oneBill.getColumnModel().getColumn(BILLCOLS.QUANTITY.getValue());
-				column.setHeaderValue(new String("Nos."));
-				column.setCellRenderer(rAlignRndr);
-				column.setMinWidth(50);
-				
-				column = oneBill.getColumnModel().getColumn(BILLCOLS.PRICE.getValue());
-				column.setHeaderValue(new String("Price"));
-				column.setCellRenderer(rAlignRndr);
-				column.setMinWidth(60);
-				
-				column = oneBill.getColumnModel().getColumn(BILLCOLS.DISCOUNT.getValue());
-				column.setHeaderValue(new String("Discount"));
-				column.setCellRenderer(rAlignRndr);
-				column.setMinWidth(60);
-				
-				column = oneBill.getColumnModel().getColumn(BILLCOLS.TOTAL.getValue());
-				column.setHeaderValue(new String("Total"));
-				column.setCellRenderer(rAlignRndr);
-				column.setMinWidth(60);
-			
-				JScrollPane billHolder = new JScrollPane(oneBill);
-				billHolder.setBorder(BorderFactory.createTitledBorder("Orders"));
-				BillContainer.add(billHolder);
-				
-			} catch (Exception e) {
-				reportException(e, "GenerateBill:BuildTable");
-			}
-		try{
+			DefaultTableCellRenderer rAlignRndr = new DefaultTableCellRenderer();
+			rAlignRndr.setHorizontalAlignment(JLabel.RIGHT);
+			// set table properties
+			TableColumn column = oneBill.getColumnModel().getColumn(BILLCOLS.ID.getValue());
+			column.setHeaderValue(new String("Order"));
+			column.setMinWidth(30);
+
+			column = oneBill.getColumnModel().getColumn(BILLCOLS.NAME.getValue());
+			column.setHeaderValue(new String("Item"));
+			column.setMinWidth(120);
+
+			column = oneBill.getColumnModel().getColumn(BILLCOLS.QUANTITY.getValue());
+			column.setHeaderValue(new String("Nos."));
+			column.setCellRenderer(rAlignRndr);
+			column.setMinWidth(50);
+
+			column = oneBill.getColumnModel().getColumn(BILLCOLS.PRICE.getValue());
+			column.setHeaderValue(new String("Price"));
+			column.setCellRenderer(rAlignRndr);
+			column.setMinWidth(60);
+
+			column = oneBill.getColumnModel().getColumn(BILLCOLS.DISCOUNT.getValue());
+			column.setHeaderValue(new String("Discount"));
+			column.setCellRenderer(rAlignRndr);
+			column.setMinWidth(60);
+
+			column = oneBill.getColumnModel().getColumn(BILLCOLS.TOTAL.getValue());
+			column.setHeaderValue(new String("Total"));
+			column.setCellRenderer(rAlignRndr);
+			column.setMinWidth(60);
+
+			JScrollPane billHolder = new JScrollPane(oneBill);
+			billHolder.setBorder(BorderFactory.createTitledBorder("Orders"));
+			BillContainer.add(billHolder);
+
+		} catch (Exception e) {
+			reportException(e, "GenerateBill:BuildTable");
+		}
+		try {
 			mainPanel.removeAll();
 			mainPanel.add(panelEast, BorderLayout.WEST);
-		}catch (Exception e) {
+		} catch (Exception e) {
 			// TODO: handle exception
 		}
 	}
@@ -587,7 +596,7 @@ public class ShopGUI {
 		showOrders.setActionCommand("LISO");
 		actionBox.add(showOrders);
 
-		printSummary = new JButton("Print Summary");
+		printSummary = new JButton("Generate Report");
 		printSummary.addActionListener(actionListener);
 		printSummary.setActionCommand("SUMM");
 		actionBox.add(printSummary);
@@ -713,6 +722,104 @@ public class ShopGUI {
 		panelCentre.setPreferredSize(new Dimension(430, 400));
 	}
 
+	/**
+	 * Method to display OrderList
+	 */
+	private void displayOrderList() {
+		
+		Collection<Order> orderTree;
+		double order_price;
+		JPanel liso = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+		JPanel lisobox = new JPanel();
+		lisobox.setLayout(new BoxLayout(lisobox, BoxLayout.PAGE_AXIS));
+		lisobox.setBorder(BorderFactory.createTitledBorder("Order Summary"));
+		lisobox.setBackground(new Color(255, 255, 255));
+		lisobox.setPreferredSize(new Dimension(700, 410));
+
+		DefaultTableModel orderModel = new javax.swing.table.DefaultTableModel(0, 8);
+		int tcount = 0;
+		
+		try {
+			orderTree = OrderList.getOrderItems();
+			if (orderTree == null) {
+				dialog("No Orders in the OrderList", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			Iterator<Order> orderIterator = orderTree.iterator();
+			while (orderIterator.hasNext()) {
+				Order oneOrder = orderIterator.next();
+				order_price = ItemList.findByName(oneOrder.getItem().toString()).getCost();
+				
+				orderModel.insertRow(tcount,
+						new Object[] { oneOrder.getID(), oneOrder.getCustomer(), oneOrder.getItem(),
+								oneOrder.getQuantity(), order_price, ( oneOrder.getDiscount() * order_price ), oneOrder.getTotal(),
+								oneOrder.getTime() });
+				tcount++;
+
+			}
+		} catch (Exception e) {
+			reportException(e, "displayOrderList: iterator");
+		}
+
+		JTable orderTable = new JTable(orderModel);
+		
+		// prepare right alignment rendering for certain columns of table.
+					DefaultTableCellRenderer rAlignRndr = new DefaultTableCellRenderer();
+					rAlignRndr.setHorizontalAlignment(JLabel.RIGHT);
+					// set table properties
+					TableColumn column = orderTable.getColumnModel().getColumn(BILLCOLS.ID.getValue());
+					column.setHeaderValue(new String("Order"));
+					column.setMinWidth(30);
+
+					column = orderTable.getColumnModel().getColumn(1);
+					column.setHeaderValue(new String("Customer"));
+					column.setMinWidth(30);
+
+					column = orderTable.getColumnModel().getColumn(2);
+					column.setHeaderValue(new String("Item"));
+					column.setMinWidth(120);
+
+					column = orderTable.getColumnModel().getColumn(3);
+					column.setHeaderValue(new String("Nos."));
+					column.setCellRenderer(rAlignRndr);
+					column.setMinWidth(30);
+
+					column = orderTable.getColumnModel().getColumn(4);
+					column.setHeaderValue(new String("Price"));
+					column.setCellRenderer(rAlignRndr);
+					column.setMinWidth(30);
+					
+					column = orderTable.getColumnModel().getColumn(5);
+					column.setHeaderValue(new String("Discount"));
+					column.setCellRenderer(rAlignRndr);
+					column.setMinWidth(30);
+
+
+					column = orderTable.getColumnModel().getColumn(6);
+					column.setHeaderValue(new String("Total"));
+					column.setCellRenderer(rAlignRndr);
+					column.setMinWidth(50);
+					
+					column = orderTable.getColumnModel().getColumn(7);
+					column.setHeaderValue(new String("TimeStamp"));
+					column.setCellRenderer(rAlignRndr);
+					column.setMinWidth(120);
+		
+		JScrollPane tableHolder = new JScrollPane(orderTable);
+		
+		lisobox.add(tableHolder);
+
+		liso.add(lisobox);
+
+		mainPanel.removeAll();
+		mainPanel.add(liso);
+		mainPanel.repaint();
+
+	}
+
+	/**
+	 * Customer Bill Panel
+	 */
 	private void prepareEastPanel() {
 		panelEast = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
 		BillContainer = new JPanel();
@@ -725,11 +832,13 @@ public class ShopGUI {
 
 	}
 
-	private void setMainPanelDefaultView(){
+	private void setMainPanelDefaultView() {
 		mainPanel.removeAll();
 		mainPanel.add(panelWest, BorderLayout.WEST);
 		mainPanel.add(panelCentre, BorderLayout.CENTER);
+		mainPanel.repaint();
 	}
+
 	private void prepareMainPanel() {
 		prepareWestPanel();
 		prepareCentrePanel();
@@ -737,7 +846,7 @@ public class ShopGUI {
 		mainPanel = new JPanel(new BorderLayout(2, 2));
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 		setMainPanelDefaultView();
-		//mainPanel.add(panelEast, BorderLayout.EAST);
+		// mainPanel.add(panelEast, BorderLayout.EAST);
 	}
 
 	// public methods

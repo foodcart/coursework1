@@ -21,6 +21,7 @@ import java.util.Scanner;
 public class ItemList {
 //	private HashMap<String, Item> ItemList;
 	private Map<String, Item > ItemList ;
+	private Map<String, String> Index;
 
 	/**
 	 * Constructor to create ItemList object / Menu
@@ -29,6 +30,7 @@ public class ItemList {
 	public ItemList(String file ) {
 		String filename = file;
 		ItemList  = readFile(filename );
+		genIndex();
 	}
 	
 	public ItemList( ) {
@@ -42,6 +44,24 @@ public class ItemList {
 	 */
 	public Item findByID(String id) {
 		return ItemList.get(id); 	
+	}
+
+	/**
+	 * Method to return Item from Name
+	 */
+	public Item findByName(String desc){
+		return ItemList.get(Index.get(desc));
+	}
+/**
+ * Method keeps an index for Key, Description
+ * 	
+ */
+	private void genIndex(){
+		Index = new HashMap<String, String>();
+		for(Entry<String, Item> entry : ItemList.entrySet()){
+			Index.put(entry.getValue().getDescription().toString(), entry.getKey().toString());
+			
+		}
 	}
 	
 	/**

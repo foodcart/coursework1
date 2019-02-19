@@ -158,15 +158,12 @@ public class OrderList {
 		
 	}
 /**
- * Returns the TreeMap of Orders and exception(if any)	
+ * Returns the Collection of Orders and exception(if any)	
  * @return
  */
-	public Object[] getOrderItems( ){
-		Object obj[] = new Object[2];
-		Map<Integer,Order> OrderItems = OrderList;	
-		obj[0] = OrderItems;
-		obj[1] = excpMessage;
-		return obj;
+	public Collection<Order> getOrderItems( ){
+
+		return OrderList.values();
 	}
 	
 	public Object[] getOrderItems( int Customer ){
