@@ -23,13 +23,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 
 public class ShopGUI {
 
-	// GUI elements, shared globally
+	// parent directory for file access
+	String parentDir;
+	// GUI elements
 	private JFrame frame;
 	private JPanel mainPanel;
 	private JPanel panelNorth;
@@ -161,12 +164,22 @@ public class ShopGUI {
 			// to do NEWO LISO SUMM ADDI REMI TOTA BILL
 			switch (e.getActionCommand()) {
 			case "NEWO":
+				try{
+					if(model.getRowCount() > 0){
+						for(int i = model.getRowCount()-1; i> -1; i--){
+							model.removeRow(i);
+						}
+					}
+				}catch(Exception exp){ reportException(exp, "Action:NewOrder");}
 				setMainPanelDefaultView();
+				newOrder.setEnabled(false);
 				break;
 			case "LISO":
+				newOrder.setEnabled(true);
 				displayOrderList();
 				break;
 			case "SUMM":
+				newOrder.setEnabled(true);
 				generateReport(false);
 				break;
 			case "ADDI":
@@ -179,6 +192,7 @@ public class ShopGUI {
 			// System.out.print(e.getActionCommand());
 			case "BILL":
 				generateBill();
+				newOrder.setEnabled(true);
 				break;
 			}
 		}
@@ -435,7 +449,7 @@ public class ShopGUI {
 					wo.price = Double.parseDouble(model.getValueAt(row, TABCOLS.PRICE.getValue()).toString());
 					wo.quantity = 1;
 					wo.discount = 0;
-					if (wo.category.equals("C1") || wo.category.equals("C1")) {
+					if (wo.category.equals("C1") || wo.category.equals("C2")) {
 						c1.put(counter1, wo);
 						counter1++;
 					} else {
@@ -763,8 +777,8 @@ public class ShopGUI {
 
 	private void instantiate() {
 		// filepaths
-		MenuFile = new String("../foodCart/core/menuitems.db");
-		OrderFile = new String("../foodCart/core/orderlist.db");
+		MenuFile = new String( parentDir + File.separator + "menuitems.db") ; //../foodCart/core/menuitems.db
+		OrderFile = new String(parentDir + File.separator + "orderlist.db");
 		// instantiate the MenuList
 		ItemList = new ItemList(MenuFile);
 		menuCategories = ItemList.getMenuCategories();
@@ -1087,11 +1101,9 @@ public class ShopGUI {
 	}
 
 	// public methods
-	public static void main(String[] args) {
-		new ShopGUI();
-	}
 
-	public ShopGUI() {
+	public ShopGUI(String pDir) {
+		parentDir = pDir;
 		instantiate();
 		prepareNorthPanel();
 		prepareMainPanel();

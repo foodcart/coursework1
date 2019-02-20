@@ -65,8 +65,11 @@ public class OrderList {
 		Order newOrder;
 		try {
 			newOrder = new Order(id, customer, item, quantity, time, discount, total);
+			//append to OrderList
 			add(newOrder);
 			obj[0] = newOrder;
+			// append to the orders.db file
+			obj[1] = appendFile(newOrder);
 		} catch (InvalidQuantityException e) {
 			obj[1] = new MessageStore(e);
 		}
@@ -181,5 +184,35 @@ public class OrderList {
 		return obj;
 	}
 	
+	private MessageStore appendFile(Order o){
+		
+		MessageStore ms = null;
+		
+		String parts[] = new String[7];
+		parts[0] = Integer.toString(o.getID());//id
+		parts[1] = Integer.toString(o.getCustomer());//customer
+		parts[2] = o.getItem();
+		parts[3] = Integer.toString(o.getQuantity());
+		parts[4] = Double.toString(o.getDiscount());
+		parts[5] = Double.toString(o.getTotal());
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		Date d = new Date(); d.setTime(o.getTime().getTime());
+		parts[6] = sdf.format( d );
+		 
+		
+		String output = System.lineSeparator() + String.join(",", parts);
+		
+		//try appending to orderlist
+		try {
+			BufferedWriter fileWriter =  new BufferedWriter(new FileWriter( FileName, true ));
+			fileWriter.write(output);
+			fileWriter.close();
+		} catch (IOException e) {
+			ms = new MessageStore(e);
+		}
+		
+		return ms;
+	}
 }
 
