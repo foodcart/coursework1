@@ -29,7 +29,6 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class ShopGUI {
-
 	// parent directory for file access
 	String parentDir;
 	// GUI elements
@@ -1101,7 +1100,7 @@ public class ShopGUI {
 	}
 
 	// public methods
-
+	
 	public ShopGUI(String pDir) {
 		parentDir = pDir;
 		instantiate();
@@ -1141,4 +1140,5 @@ public class ShopGUI {
 	        	else return String.class; }  //other columns accept String values
 	    }
 	}
+	
 }
