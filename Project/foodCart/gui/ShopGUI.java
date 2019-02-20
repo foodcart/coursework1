@@ -4,7 +4,6 @@ package gui;
  * and inventory.
  */
 import javax.swing.*;
-import javax.swing.border.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -18,7 +17,6 @@ import core.Order;
 import core.OrderList;
 
 import java.awt.*;
-import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
